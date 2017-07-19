@@ -38,8 +38,11 @@ class UpdateOneQuestion(threading.Thread):
             link_id = parameters[0]
             count_id = parameters[1]
             self.update(link_id,count_id)
+            print "link_id: " + str(link_id) + "     count_id: " + str(count_id)
+            time.sleep(10)
 
     def update(self,link_id,count_id):
+        print "it go"
         time_now = int(time.time())
         questionUrl = 'http://www.zhihu.com/question/' + link_id
 
@@ -49,45 +52,37 @@ class UpdateOneQuestion(threading.Thread):
             self.cursor.execute(sql,(time_now,link_id))
             return
 
-        soup = BeautifulSoup(content)
+        soup = BeautifulSoup(content, 'lxml')
 
-        questions = soup.find('div',attrs={'class':'zg-gray-normal'})
+        questions = soup.find('div',attrs={'class':'NumberBoard-value'})
+        print questions
 
         # Find out how many people focus this question.
         if questions == None:
             return
         else:
-            focus_amount = questions.get_text().replace('\n','')
-            focus_amount = focus_amount.replace(u'人关注该问题','')
-            focus_amount = focus_amount.replace(u'关注','')
+            focus_amount = questions.get_text()
 
-            if focus_amount == u'问题还没有':
-                focus_amount = u'0'
-
-        focus_amount = focus_amount.replace(u'问题','')
-
-        if focus_amount == u'\\xe8\\xbf\\x98\\xe6\\xb2\\xa1\\xe6\\x9c\\x89':  # This is a special case.
-            return
+        print "focus_amount: " + str(focus_amount)
 
         # Find out how many people answered this question.
-        answer_amount = soup.find('h3',attrs={'id':'zh-question-answer-num'})
+        answer_amount = soup.find('h4',attrs={'class':'List-headerText'})
         if answer_amount != None:
-            answer_amount = answer_amount.get_text().replace(u' 个回答','')
+            answer_amount = answer_amount.find('span').get_text().replace(u' 个回答','')
         else:
-            answer_amount = soup.find('div',attrs={'class':'zm-item-answer'})
-            if answer_amount != None:
-                answer_amount = u'1'
-            else:
-                answer_amount = u'0'
+            answer_amount = u'0'
+
+        print "answer_amount: " + str(answer_amount)
 
         # Find out the top answer's vote amount.
-        top_answer = soup.findAll('span',attrs={'class':'count'})
+        top_answer = soup.findAll('span',attrs={'class':'Voters'})
         if top_answer == []:
             top_answer_votes = 0
         else:
             top_answer_votes = 0
             for t in top_answer:
-                t = t.get_text()
+                t = t.find('button').get_text()
+                t = t.replace(u' 人赞同了该回答','')
                 t = t.replace('K','000')
                 t = int(t)
                 if t > top_answer_votes:
@@ -139,11 +134,13 @@ class UpdateQuestions:
         threads = []
 
         time_now = int(time.time())
-        before_last_visit_time = time_now - 12*3600
-        after_add_time = time_now - 24*3600*14
+#        before_last_visit_time = time_now - 12*3600
+#        after_add_time = time_now - 24*3600*14
 
-        sql = "SELECT LINK_ID from QUESTION WHERE LAST_VISIT < %s AND ADD_TIME > %s AND ANSWER < 8 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
-        self.cursor.execute(sql,(before_last_visit_time,after_add_time))
+#        sql = "SELECT LINK_ID from QUESTION WHERE LAST_VISIT < %s AND ADD_TIME > %s AND ANSWER < 50 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
+        sql = "SELECT LINK_ID from QUESTION WHERE ANSWER < 50 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
+#        self.cursor.execute(sql,(before_last_visit_time,after_add_time))
+        self.cursor.execute(sql)
         results = self.cursor.fetchall()
         
         i = 0

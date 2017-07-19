@@ -38,6 +38,7 @@ class UpdateOneTopic(threading.Thread):
             link_id = t[0]
             count_id = t[1]
             self.find_new_question_by_topic(link_id,count_id)
+            time.sleep(5)
 
     def find_question_by_link(self,topic_url,count_id):
         content = get_content(topic_url,count_id)
@@ -62,7 +63,6 @@ class UpdateOneTopic(threading.Thread):
             anser_list = anser_list + [(tem_text, int(tem_id), 0, 0, 0, time_now, 0)]
 
         self.cursor.executemany(p_str,anser_list)
-
         return self.cursor.rowcount
 
     def find_new_question_by_topic(self,link_id,count_id):
@@ -74,6 +74,7 @@ class UpdateOneTopic(threading.Thread):
 
             if new_question_amount_one_page <= 2:
                 break
+            time.sleep(5)
         
         if count_id % 2 == 0:
             print str(count_id) + " , " + self.getName() + " Finshed TOPIC " + link_id + ", page " + str(i) + " ; Add " + str(new_question_amount_total) + " questions."
@@ -86,7 +87,7 @@ class UpdateTopics:
     def __init__(self):
         cf = ConfigParser.ConfigParser()
         cf.read("config.ini")
-        
+       
         host = cf.get("db", "host")
         port = int(cf.get("db", "port"))
         user = cf.get("db", "user")
