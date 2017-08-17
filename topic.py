@@ -46,7 +46,7 @@ class UpdateOneTopic(threading.Thread):
         if content == "FAIL":
             return 0
 
-        soup = BeautifulSoup(content)
+        soup = BeautifulSoup(content, 'lxml')
 
         questions = soup.findAll('a',attrs={'class':'question_link'})
 

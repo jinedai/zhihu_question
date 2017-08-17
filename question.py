@@ -1,4 +1,4 @@
-#coding=utf-8
+#LAST_VISITcoding=utf-8
 import MySQLdb
 from bs4 import BeautifulSoup
 import json
@@ -55,7 +55,6 @@ class UpdateOneQuestion(threading.Thread):
         soup = BeautifulSoup(content, 'lxml')
 
         questions = soup.find('div',attrs={'class':'NumberBoard-value'})
-        print questions
 
         # Find out how many people focus this question.
         if questions == None:
@@ -138,7 +137,7 @@ class UpdateQuestions:
 #        after_add_time = time_now - 24*3600*14
 
 #        sql = "SELECT LINK_ID from QUESTION WHERE LAST_VISIT < %s AND ADD_TIME > %s AND ANSWER < 50 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
-        sql = "SELECT LINK_ID from QUESTION WHERE ANSWER < 50 AND TOP_ANSWER_NUMBER < 50 ORDER BY LAST_VISIT"
+        sql = "SELECT LINK_ID from QUESTION WHERE FOCUS = 0 AND ANSWER = 0 ORDER BY LAST_VISIT"
 #        self.cursor.execute(sql,(before_last_visit_time,after_add_time))
         self.cursor.execute(sql)
         results = self.cursor.fetchall()
